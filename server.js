@@ -3,13 +3,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const express = require('express');
-const { promises: fs, createReadStream } = require('fs');
+const { promises: fs } = require('fs');
 const path = require('path');
 const expressFileupload = require('express-fileupload');
-const crypto = require('crypto')
-const { promisify } = require('util');
-
-const location = process.env.FOLDER ?? 'uploads'
+const { fileUtils, location } = require('./utils/file.util');
 
 async function main() {
   const app = express();
@@ -32,37 +29,51 @@ async function main() {
       })
     }
 
-    const publicKey = crypto.randomBytes(16).toString('hex')
-    const privateKey = crypto.randomBytes(16).toString('hex')
+    const fileKeys = await fileUtils.uploadFile(file)
 
-    const url = `${location}/${publicKey}-${privateKey}.${file.mimetype.split('/')[1]}`
+    if (!fileKeys) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error Uploading File',
+      })
+    }
 
-    await promisify(file.mv)(url)
-
-    res.json({ publicKey, privateKey })
+    res.status(201).json({
+      success: true,
+      data: fileKeys
+    })
   });
 
   app.get('/files/:publicKey', async function (req, res) {
     const publicKey = req.params.publicKey;
-    const files = await fs.readdir(location)
-    const fileFound = files.find((file) => file.includes(publicKey))
 
-    if (!fileFound) {
-      return res.status(404).json({ message: 'File not found' })
+    const fileToSend = await fileUtils.getFile(publicKey)
+
+    if (!fileToSend) {
+      return res.status(404).json({
+        success: false,
+        message: 'File Not Found'
+      })
     }
 
-    const fileStream = createReadStream(path.resolve(location, fileFound))
-
-    fileStream.pipe(res)
+    fileToSend.pipe(res)
   });
 
   app.delete('/files/:privateKey', async function (req, res) {
     const privateKey = req.params.privateKey;
-    const files = await fs.readdir(location)
-    const fileFound = files.find((file) => file.includes(privateKey))
-    await fs.unlink(path.resolve(location, fileFound));
+
+    const fileDeleted = await fileUtils.deleteFile(privateKey)
+
+    if (!fileDeleted) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error Deleting File'
+      })
+    }
+
     res.json({
-      message: 'File deleted'
+      success: true,
+      message: 'File Deleted'
     });
   });
 
