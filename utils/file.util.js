@@ -2,6 +2,7 @@ const crypto = require('crypto')
 const { promisify } = require('util')
 const { promises: fs, createReadStream } = require('fs')
 const path = require('path')
+const cron = require('node-cron');
 
 const location = process.env.FOLDER ?? 'uploads'
 
@@ -49,6 +50,32 @@ const mainUtils = {
       return false
     }
   },
+  cleanupInactiveFiles: async () => {
+
+    // Clean up files that have not been accessed in 7 days every day at 1:00 AM
+    const cutoffPeriod = process.env.CUTOFF_PERIOD || 7 * 24 * 60 * 60 * 1000; // Default to 7 days
+    cron.schedule('0 1 * * *', async () => {
+      const folderPath = location;
+      const cutoffDate = new Date(Date.now() - cutoffPeriod);
+      try {
+        const files = await fs.readdir(folderPath);
+        for (const file of files) {
+          const filePath = path.join(folderPath, file);
+          try {
+            const stats = await fs.stat(filePath);
+            if (stats.isFile() && stats.atime < cutoffDate) {
+              await fs.unlink(filePath);
+              console.log(`Deleted file: ${filePath}`);
+            }
+          } catch (err) {
+            console.warn(`Error processing file ${filePath}: ${err.message}`);
+          }
+        }
+      } catch (err) {
+        console.error(`Error reading folder ${folderPath}: ${err.message}`);
+      }
+    });
+  }
 }
 
 module.exports = {

@@ -13,6 +13,9 @@ const { uploadLimiter, downloadLimiter } = require('./utils/limit.util');
 async function main() {
   const app = express();
 
+  // Cleanup Inactive Files
+  fileUtils.cleanupInactiveFiles()
+
   await fs.mkdir(path.resolve(location), { recursive: true });
 
   app.use(express.static(path.resolve(__dirname, location)))
