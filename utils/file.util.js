@@ -28,7 +28,7 @@ const mainUtils = {
       const fileFound = files.find((file) => file.includes(publicKey))
 
       if (!fileFound) {
-        return res.status(404).json({ message: 'File not found' })
+        return false
       }
 
       const fileStream = createReadStream(path.resolve(location, fileFound))
@@ -54,7 +54,7 @@ const mainUtils = {
 
     // Clean up files that have not been accessed in 7 days every day at 1:00 AM
     const cutoffPeriod = process.env.CUTOFF_PERIOD || 7 * 24 * 60 * 60 * 1000; // Default to 7 days
-    cron.schedule('0 1 * * *', async () => {
+    const job = cron.schedule('0 1 * * *', async () => {
       const folderPath = location;
       const cutoffDate = new Date(Date.now() - cutoffPeriod);
       try {
@@ -75,6 +75,8 @@ const mainUtils = {
         console.error(`Error reading folder ${folderPath}: ${err.message}`);
       }
     });
+
+    return job
   }
 }
 

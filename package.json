@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --config=./jest.config.js --runInBand --detectOpenHandles --forceExit",
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
@@ -23,6 +23,12 @@
   },
   "devDependencies": {
     "dotenv": "^16.0.3",
-    "nodemon": "^2.0.22"
+    "istanbul-lib-coverage": "^3.2.0",
+    "istanbul-lib-report": "^3.0.0",
+    "istanbul-reports": "^3.1.5",
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.22",
+    "nyc": "^15.1.0",
+    "supertest": "^6.3.3"
   }
 }

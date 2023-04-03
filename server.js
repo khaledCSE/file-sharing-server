@@ -10,12 +10,9 @@ const { fileUtils, location } = require('./utils/file.util');
 
 const { uploadLimiter, downloadLimiter } = require('./utils/limit.util');
 
+const app = express();
+
 async function main() {
-  const app = express();
-
-  // Cleanup Inactive Files
-  fileUtils.cleanupInactiveFiles()
-
   await fs.mkdir(path.resolve(location), { recursive: true });
 
   app.use(express.static(path.resolve(__dirname, location)))
@@ -82,6 +79,10 @@ async function main() {
     });
   });
 
+  // Cleanup Inactive Files
+  fileUtils.cleanupInactiveFiles()
+
+
   const port = process.env.PORT ?? 8000
   app.listen(port, function () {
     console.log('File Sharing API Server listening on port', port);
@@ -89,3 +90,5 @@ async function main() {
 }
 
 main()
+
+module.exports = app
