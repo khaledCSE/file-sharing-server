@@ -8,6 +8,8 @@ const path = require('path');
 const expressFileupload = require('express-fileupload');
 const { fileUtils, location } = require('./utils/file.util');
 
+const { uploadLimiter, downloadLimiter } = require('./utils/limit.util');
+
 async function main() {
   const app = express();
 
@@ -17,10 +19,10 @@ async function main() {
 
   app.use(expressFileupload({
     useTempFiles: true,
-    tempFileDir: '/tmp/'
+    tempFileDir: '/tmp/',
   }))
 
-  app.post('/files', async function (req, res) {
+  app.post('/files', uploadLimiter, async function (req, res) {
     const { file } = req.files
     if (!file) {
       return res.status(400).json({
@@ -44,7 +46,7 @@ async function main() {
     })
   });
 
-  app.get('/files/:publicKey', async function (req, res) {
+  app.get('/files/:publicKey', downloadLimiter, async function (req, res) {
     const publicKey = req.params.publicKey;
 
     const fileToSend = await fileUtils.getFile(publicKey)
