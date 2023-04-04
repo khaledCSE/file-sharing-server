@@ -28,7 +28,7 @@ describe('File Utils', () => {
       jest.spyOn(crypto, 'randomBytes').mockReturnValueOnce(Buffer.from('mocked-public-key')).mockReturnValueOnce(Buffer.from('mocked-private-key'))
 
       // Call the uploadFile function
-      const result = await uploadFile(file)
+      const result = await uploadFile(file, 'local')
 
       // Verify that the file was moved to the correct URL
       expect(promisify).toHaveBeenCalledWith(file.mv)

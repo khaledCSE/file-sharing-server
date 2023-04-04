@@ -12,6 +12,8 @@ const { uploadLimiter, downloadLimiter } = require('./utils/limit.util');
 
 const app = express();
 
+const provider = process.env.PROVIDER ?? 'local'
+
 async function main() {
   await fs.mkdir(path.resolve(location), { recursive: true });
 
@@ -31,7 +33,7 @@ async function main() {
       })
     }
 
-    const fileKeys = await fileUtils.uploadFile(file)
+    const fileKeys = await fileUtils.uploadFile(file, provider)
 
     if (!fileKeys) {
       return res.status(500).json({
@@ -49,7 +51,7 @@ async function main() {
   app.get('/files/:publicKey', downloadLimiter, async function (req, res) {
     const publicKey = req.params.publicKey;
 
-    const fileToSend = await fileUtils.getFile(publicKey)
+    const fileToSend = await fileUtils.getFile(publicKey, provider)
 
     if (!fileToSend) {
       return res.status(404).json({
@@ -64,7 +66,7 @@ async function main() {
   app.delete('/files/:privateKey', async function (req, res) {
     const privateKey = req.params.privateKey;
 
-    const fileDeleted = await fileUtils.deleteFile(privateKey)
+    const fileDeleted = await fileUtils.deleteFile(privateKey, provider)
 
     if (!fileDeleted) {
       return res.status(500).json({
